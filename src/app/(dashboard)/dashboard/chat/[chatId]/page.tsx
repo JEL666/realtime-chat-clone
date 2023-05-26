@@ -1,5 +1,5 @@
-'use client'
-
+import ChatInput from '@/components/ChatInput';
+import Messages from '@/components/Messages';
 import { fetchRedis } from '@/helper/redis';
 import { authOptions } from '@/lib/auth';
 import { messageArrayValidator } from '@/lib/validations/message';
@@ -36,29 +36,28 @@ async function getChatMessages(chatId: string) {
 
 const page = async ({ params }: PageProps) => {
   const { chatId } = params;
-  
+
   const session = await getServerSession(authOptions);
 
-  // if (!session) notFound();
+  if (!session) notFound();
 
-  // const { user } = session;
+  const { user } = session;
 
-  // const [userId1, userId2] = chatId.split('--');
+  const [userId1, userId2] = chatId.split('--');
   
-  // if (user.id !== userId1 && user.id !== userId2) {
-  //   notFound()
-  // }
+  if (user.id !== userId1 && user.id !== userId2) {
+    notFound()
+  }
 
-  // const chatPartnerId = user.id === userId1 ? userId2 : userId1;
-  // const chatPartnerRaw = (await fetchRedis(
-  //   'get',
-  //   `user:${chatPartnerId}`
-  // )) as string;
-  // const chatPartner = JSON.parse(chatPartnerRaw) as User;
+  const chatPartnerId = user.id === userId1 ? userId2 : userId1;
+  const chatPartnerRaw = (await fetchRedis(
+    'get',
+    `user:${chatPartnerId}`
+  )) as string;
+  const chatPartner = JSON.parse(chatPartnerRaw) as User;
 
-  // const initalMessages = await getChatMessages(chatId);
+  const initialMessages = await getChatMessages(chatId);
 
-  return <div>a</div>;
   return (
     <div
       className='
@@ -111,6 +110,9 @@ const page = async ({ params }: PageProps) => {
           </div>
         </div>
       </div>
+      
+      <Messages initialMessages={initialMessages} sessionId={session.user.id} />
+      <ChatInput chatPartner={chatPartner} chatId={chatId} />
     </div>
   );
 }
